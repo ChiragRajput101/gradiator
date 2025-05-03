@@ -2,7 +2,7 @@ class Node:
     def __init__(self, value, grad=1.0, _prev=(), _op='', _label=''):
         self.value = value
         self.grad = grad
-        self._prev = set(_prev)
+        self._prev = _prev
         self._op = _op
         self._label = _label
 
@@ -28,7 +28,7 @@ class Node:
         return f"Node(value={self.value}, grad={self.grad})"
 
 
-h = 0 # sanity check: following the direction of grad to see if Loss increases
+h = 0.1 # sanity check: following the direction of grad to see if Loss increases
  
 w1 = Node(3.0-h); w1._label = 'w1'
 w2 = Node(4.0); w2._label = 'w2'
