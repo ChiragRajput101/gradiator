@@ -1,38 +1,67 @@
+import math
+
 class Node:
-    def __init__(self, value, _prev=(), _op='', _label=''):
+    def __init__(self, value, prev=(), _op='', _label=''):
         self.value = value
-        self._prev = _prev
+        self.prev = prev
         self.grad = 0.0
         self._op = _op
         self._label = _label
         self._backward = lambda: None
 
     def backward(self):
-        dag = []
-
-        def dfs(root):
-            dag.append(root)
-            for v in root._prev:
-                dfs(v)
-
-        dfs(self)
         self.grad = 1.0
-        for v in dag:
-            v._backward()
-        
-        def print_grad():
-            for v in dag:
-                print(f"{v._label} {v.grad}")
-        
-        # print_grad()
+
+        self._backward()
+        def dfs(root):
+            for v in root.prev:
+                v._backward()
+                dfs(v) 
+
+        dfs(self)  
+
 
     # Activation functions
-    def sigmoid(self):
-        pass
+    def relu(self):
+        out = Node(max(0,self.value), (self, ), 'relu')
+
+        def _backward():
+            if self.value > 0:
+                self.grad += 1.0 * out.grad
+            else:
+                self.grad = 0
         
+        out._backward = _backward
+        return out
+
+
+    def sigmoid(self):
+        x = self.value
+        ret = 1 / (1 + math.exp(-x))
+        out = Node(ret, (self, ), 'sigmoid')
+
+        def _backward():
+            self.grad += ret * (1 - ret) * out.grad
+        
+        out._backward = _backward
+        return out
+
+
+    def tanh(self):
+        x = self.value
+        ret = (math.exp(2*x) - 1) / (math.exp(2*x) + 1)
+        out = Node(ret, (self, ), 'tanh')
+
+        def _backward():
+            self.grad += (1 - ret**2) * out.grad
+        out._backward = _backward
+        return out
+        
+
     def __add__(self, node):
         out = Node(self.value + node.value, (self, node), '+')
 
+        # out is captured by reference
         def _backward():
             self.grad += out.grad
             node.grad += out.grad
@@ -41,6 +70,7 @@ class Node:
         out._backward = _backward 
         return out
         
+
     def __mul__(self, node):
         out = Node(self.value * node.value, (self, node), '*')
 
@@ -52,6 +82,6 @@ class Node:
         out._backward = _backward # fn
         return out
         
-    def __repr__(self):
-        return f"Node(value={self.value}, grad={self.grad})"
 
+    def __repr__(self):
+        return f"Node({self.value}, grad={self.grad})"
