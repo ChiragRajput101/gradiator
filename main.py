@@ -1,43 +1,57 @@
 from node import Node
-import torch
+import random
+
+# initializes Node-based vector of dimensions = dims, random values in [0,1]
+def init_weights(dims=()):
+    assert len(dims) > 1, "can't initialize tensor with less than 2 dimensions"
+    weight_tensor = []
+    r = dims[0]; c = dims[1]
+    for i in range(r):
+        row_vec = [Node(random.random()) for _ in range(c)]
+        weight_tensor.append(row_vec)
+    return weight_tensor
+
+# converts int/float based vectors to Node-based vectors
+def tensorize(v):
+    assert ( len(v) > 0 and isinstance(v[0], list) ), "invalid input, must have more than 1 dimension"
+    for i in range(0, len(v)):
+        for j in range(0, len(v[0])):
+            v[i][j] = (Node(v[i][j]))
+
+# calculates dot product of 2 Node-based vectors
+def dot(v1, v2):
+    assert (len(v1) == len(v2) and len(v1[0]) == len(v2[0])), "invalid, dims of both should be the same"
+    ret = []
+    for i in range(len(v1)):
+        dp = [i * j for i,j in zip(v1[i],v2[i])]
+        dummy = Node(0)
+        for n in dp:
+            dummy = dummy + n
+        dp = dummy
+        dp.op = 'dot_prod'
+        ret.append(dp)
+    return ret
+
 
 h = 0.1 # sanity check: following the direction of grad to see if Loss increases
 
-def cust():
-    w1 = Node(1.2); w1._label = 'w1'
-    w2 = Node(1.0); w2._label = 'w2'
-    x1 = Node(-2.0); x1._label = 'x1'
-    x2 = Node(2.1); x2._label = 'x2'
+x = [[1.4, 2, 1.3, 0.4], [1.4, 2, 1.3, 0.4]]
+tensorize(x)
+# in = 4 nodes, hidden = 2 nodes, out = 1 node
+w = init_weights((2,4))
+'''
+[ [w11 w21 w31 w41]    
+  [w12 w22 w32 w42] ]  
+'''
 
-    e = w1*x1; e._label = 'e'
-    f = w2*x2; f._label = 'f'
+dp = [dot(x,w)]
+w2 = init_weights((1,2))
+a = dot(dp, w2)
+z = a[0].sigmoid()
+z.backward()
 
-    g = e+f; g._label = 'g'
-    Loss = g.sigmoid(); Loss._label = 'Loss'
-    Loss.backward()
-    print(w1,w2,x1,x2,e,f,g,Loss)
-
-def trch():
-    w1 = torch.Tensor([1.2]); w1.requires_grad = True
-    w2 = torch.Tensor([1.0]); w2.requires_grad = True
-    x1 = torch.Tensor([-2.0]); x1.requires_grad = True
-    x2 = torch.Tensor([2.1]); x2.requires_grad = True
-
-    e = w1*x1; e.retain_grad()
-    f = w2*x2; f.retain_grad()
-    g = e+f; g.retain_grad()
-    Loss = torch.sigmoid(g); Loss.retain_grad()
-
-    Loss.backward()
-
-    print(w1.grad.item())
-    print(w2.grad.item())
-    print(x1.grad.item())
-    print(x2.grad.item())
-    print(e.grad.item())
-    print(f.grad.item())
-    print(g.grad.item())
-    print(Loss.grad.item())
-
-cust()
-trch()
+print('z: ', z)
+print('a: ', a)
+print('w2: ', w2)
+print('dp: ', dp)
+print('w: ', w)

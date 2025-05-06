@@ -2,7 +2,7 @@ import math
 
 class Node:
     def __init__(self, value, prev=(), _op='', _label=''):
-        self.value = value
+        self.value = float(value)
         self.prev = prev
         self.grad = 0.0
         self._op = _op
@@ -29,7 +29,7 @@ class Node:
             if self.value > 0:
                 self.grad += 1.0 * out.grad
             else:
-                self.grad = 0
+                self.grad = 0.0
         
         out._backward = _backward
         return out
@@ -84,4 +84,4 @@ class Node:
         
 
     def __repr__(self):
-        return f"Node({self.value}, grad={self.grad})"
+        return f"Node({self.value}, grad = {self.grad})"
