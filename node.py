@@ -11,15 +11,20 @@ class Node:
 
     def backward(self):
         self.grad = 1.0
-
+        
         self._backward()
         def dfs(root):
             for v in root.prev:
                 v._backward()
                 dfs(v) 
-
         dfs(self)  
 
+    def help(self):
+        def dfs(root):
+            print(root)
+            for v in root.prev:
+                dfs(v) 
+        dfs(self) 
 
     # Activation functions
     def relu(self):
@@ -34,7 +39,6 @@ class Node:
         out._backward = _backward
         return out
 
-
     def sigmoid(self):
         x = self.value
         ret = 1 / (1 + math.exp(-x))
@@ -46,7 +50,6 @@ class Node:
         out._backward = _backward
         return out
 
-
     def tanh(self):
         x = self.value
         ret = (math.exp(2*x) - 1) / (math.exp(2*x) + 1)
@@ -57,7 +60,6 @@ class Node:
         out._backward = _backward
         return out
         
-
     def __add__(self, node):
         out = Node(self.value + node.value, (self, node), '+')
 
@@ -69,8 +71,19 @@ class Node:
         # creates a linkage between the local input and output, triggers the gradient calculation from 'out' to input nodes
         out._backward = _backward 
         return out
-        
 
+    def __sub__(self, node):
+        out = Node(self.value - node.value, (self, node), '-')
+
+        # out is captured by reference
+        def _backward():
+            self.grad += 1.0 * out.grad
+            node.grad += (-1.0) * out.grad
+
+        # creates a linkage between the local input and output, triggers the gradient calculation from 'out' to input nodes
+        out._backward = _backward 
+        return out
+        
     def __mul__(self, node):
         out = Node(self.value * node.value, (self, node), '*')
 
@@ -81,7 +94,15 @@ class Node:
         # creates a linkage between the local input and output, triggers the gradient calculation from 'out' to input nodes
         out._backward = _backward # fn
         return out
-        
+    
+    def __pow__(self, p):
+        out = Node(self.value ** p.value, (self, ), 'pow')
 
+        def _backward():
+            self.grad += p.value * (self.value ** (p.value - 1)) * out.grad
+        
+        out._backward = _backward
+        return out
+        
     def __repr__(self):
-        return f"Node({self.value}, grad = {self.grad})"
+        return f"Node({self._op}: {self.value}, grad = {self.grad})"
