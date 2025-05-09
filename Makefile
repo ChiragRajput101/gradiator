@@ -3,3 +3,4 @@ run:
 	@python3 functional.py
 	@python3 network.py
 	@python3 main.py
+	

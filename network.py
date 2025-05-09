@@ -14,7 +14,6 @@ class Layer:
        w = self.F.init_weights((self.out, self.inp))
        return w
 
-
 # network class - abstracts the way to create a NN
 class Network:
    def __init__(self, x, y, lr=0.001, iters=50):
